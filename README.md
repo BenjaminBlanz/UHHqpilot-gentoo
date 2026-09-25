@@ -1,3 +1,14 @@
+> **This repository has moved to the RRZ GitLab:**
+> https://gitlab-ce.rrz.uni-hamburg.de/baj2533/uhh-qpilot-gentoo
+>
+> It is archived here and no longer updated. Switch your overlay with
+>
+> ```sh
+> eselect repository remove -f uhh-qpilot
+> eselect repository add uhh-qpilot git https://gitlab-ce.rrz.uni-hamburg.de/baj2533/uhh-qpilot-gentoo.git
+> emerge --sync uhh-qpilot
+> ```
+
 # UHH Q Pilot for Gentoo
 
 A Portage overlay for printing at Universität Hamburg with the **Q Pilot client**
