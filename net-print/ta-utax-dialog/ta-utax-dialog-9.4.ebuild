@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{12..14} )
+PYTHON_COMPAT=( python3_{12..15} )
 
 inherit python-single-r1 unpacker
 
@@ -30,7 +30,7 @@ RDEPEND="
 	net-print/cups
 	net-print/cups-filters
 	sys-apps/dbus
-	sys-libs/zlib
+	virtual/zlib
 	$(python_gen_cond_dep '
 		dev-python/packaging[${PYTHON_USEDEP}]
 		dev-python/reportlab[${PYTHON_USEDEP}]

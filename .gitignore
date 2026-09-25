@@ -3,3 +3,4 @@
 # RRZ guides (UHH documents, not ours to redistribute)
 /docs/
 __pycache__/
+/metadata/md5-cache/

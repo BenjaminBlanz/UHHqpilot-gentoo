@@ -16,4 +16,4 @@ exec @JAVA@ \
 	--add-opens=java.base/java.nio=ALL-UNNAMED \
 	--add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
 	--add-opens=java.base/javax.crypto=ALL-UNNAMED \
-	-jar libs/qpilot-client-gui-exe.jar "$@"
+	-cp @BRIDGE_JAR@:libs/qpilot-client-gui-exe.jar QPilotTrayBridge "$@"

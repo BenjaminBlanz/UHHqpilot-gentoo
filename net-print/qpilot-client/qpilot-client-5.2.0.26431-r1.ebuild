@@ -3,7 +3,9 @@
 
 EAPI=8
 
-inherit desktop systemd unpacker
+PYTHON_COMPAT=( python3_{12..15} )
+
+inherit desktop java-pkg-2 python-single-r1 systemd unpacker
 
 # Debian revision: PV 5.2.0.26431_p1 is deb 5.2.0.26431-1.
 MY_PV=${PV/_p/-}
@@ -16,21 +18,37 @@ S="${WORKDIR}"
 LICENSE="all-rights-reserved"
 SLOT="0"
 KEYWORDS="-* ~amd64"
+REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 RESTRICT="bindist mirror strip"
 
 RDEPEND="
+	${PYTHON_DEPS}
 	acct-user/qpilot
 	|| ( >=sys-apps/openrc-0.45 sys-apps/systemd )
 	>=virtual/jre-17:*
 	net-print/cups
 	net-print/ta-utax-dialog
+	$(python_gen_cond_dep 'dev-python/pyqt6[dbus,gui,widgets,${PYTHON_USEDEP}]')
 "
+DEPEND=">=virtual/jdk-17:*"
 BDEPEND="app-arch/unzip"
 
 QP_HOME="/opt/qpilot-client"
 
 # Queues the UHH profile defines, as <name>.ppd under here.
 QP_PPD_DIR="/usr/share/qpilot-client/ppd"
+
+pkg_setup() {
+	java-pkg-2_pkg_setup
+	python-single-r1_pkg_setup
+}
+
+src_compile() {
+	# Shows the GUI's AWT tray icon as a StatusNotifierItem via qpilot-tray.
+	mkdir classes || die
+	ejavac -d classes "${FILESDIR}"/QPilotTrayBridge.java
+	"$(java-config -j)" cf qpilot-tray-bridge.jar -C classes . || die
+}
 
 src_install() {
 	local qp="${S}/tmp/qp52"
@@ -59,7 +77,7 @@ src_install() {
 	grep -q '^qpilot.host=' "${d}"/Service/service-config.txt \
 		|| die "UHH server profile was not applied"
 	[[ -f ${d}/GUI/qpilot-client-gui.desktop ]] \
-		|| die "installer moved its desktop file out of the image; delete ${EROOT}/etc/xdg/autostart/qpilot-client-gui.desktop"
+		|| die "installer moved its desktop file out of the image; delete /etc/xdg/autostart/qpilot-client-gui.desktop"
 
 	# Bundled 2022 JRE, uninstaller and launchers with the image path baked in.
 	rm -r "${d}"/Java "${d}"/uninstall "${d}"/uninstall.dat \
@@ -72,11 +90,14 @@ src_install() {
 	local f
 	for f in qpilot-client-service qpilot-client-gui; do
 		sed -e "s|@QP_HOME@|${EPREFIX}${QP_HOME}|" -e "s|@JAVA@|${EPREFIX}/usr/bin/java|" \
+			-e "s|@BRIDGE_JAR@|${EPREFIX}/usr/share/${PN}/lib/qpilot-tray-bridge.jar|" \
 			"${FILESDIR}/${f}" > "${T}/${f}" || die
 	done
 	exeinto /usr/libexec/qpilot-client
-	doexe "${T}"/qpilot-client-service
+	doexe "${T}"/qpilot-client-service "${FILESDIR}"/qpilot-tray
+	python_fix_shebang "${ED}"/usr/libexec/qpilot-client/qpilot-tray
 	dobin "${T}"/qpilot-client-gui
+	java-pkg_dojar qpilot-tray-bridge.jar
 
 	newinitd "${FILESDIR}"/qpilot-client.initd qpilot-client
 	systemd_dounit "${FILESDIR}"/qpilot-client.service
@@ -107,7 +128,7 @@ src_install() {
 
 # Adds or updates the UHH queues. Jobs go by LPD to the local service,
 # which passes them to the Q Pilot server for release at the printer.
-pkg_config() {
+qpilot_setup_queues() {
 	local ppd queue
 	for ppd in "${EROOT}${QP_PPD_DIR}"/*.ppd; do
 		queue=${ppd##*/}
@@ -119,8 +140,12 @@ pkg_config() {
 	done
 }
 
+pkg_config() {
+	qpilot_setup_queues
+}
+
 pkg_postinst() {
-	pkg_config || ewarn "Queues not set up; start cupsd and run: emerge --config ${CATEGORY}/${PN}"
+	qpilot_setup_queues || ewarn "Queues not set up; start cupsd and run: emerge --config ${CATEGORY}/${PN}"
 
 	if [[ -z ${REPLACING_VERSIONS} ]]; then
 		elog "Start the service:"
