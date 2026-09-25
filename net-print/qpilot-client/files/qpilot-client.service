@@ -1,0 +1,14 @@
+[Unit]
+Description=Q Pilot client service (Uni Hamburg follow-me printing)
+After=network-online.target
+Wants=network-online.target
+Before=cups.service
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/qpilot-client/qpilot-client-service
+SuccessExitStatus=143
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

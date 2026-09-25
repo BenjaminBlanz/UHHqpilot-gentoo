@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Q Pilot job list
+Name[de]=Q Pilot Druckaufträge
+Comment=Show print jobs waiting for release
+Exec=qpilot-client-gui -joblist
+Icon=qpilot-client
+Terminal=false
+Categories=Network;Printing;

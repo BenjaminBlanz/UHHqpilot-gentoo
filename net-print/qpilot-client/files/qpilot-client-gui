@@ -1,0 +1,19 @@
+#!/bin/sh
+# Starts the Q Pilot GUI from a per-user directory: it reads images/ and
+# language/ and writes gui-config.txt and logs in its working directory.
+QP_HOME=@QP_HOME@
+state="${XDG_STATE_HOME:-${HOME}/.local/state}/qpilot-client"
+mkdir -p "${state}" || exit 1
+cd "${state}" || exit 1
+for d in images language libs; do
+	[ -L "${d}" ] || ln -sfn "${QP_HOME}/GUI/${d}" "${d}"
+done
+[ -e gui-config.txt ] || cp "${QP_HOME}/GUI/gui-config.txt" .
+exec @JAVA@ \
+	-Dfile.encoding=UTF-8 \
+	-Djava.net.preferIPv4Stack=true \
+	--add-opens=java.base/java.lang=ALL-UNNAMED \
+	--add-opens=java.base/java.nio=ALL-UNNAMED \
+	--add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
+	--add-opens=java.base/javax.crypto=ALL-UNNAMED \
+	-jar libs/qpilot-client-gui-exe.jar "$@"

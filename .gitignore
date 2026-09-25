@@ -1,0 +1,5 @@
+# Vendor .debs and their unpacked trees, kept locally for reference
+/debs/
+# RRZ guides (UHH documents, not ours to redistribute)
+/docs/
+__pycache__/

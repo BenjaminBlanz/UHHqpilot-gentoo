@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+description="Q Pilot client service (Uni Hamburg follow-me printing)"
+command="/usr/libexec/qpilot-client/qpilot-client-service"
+command_background="yes"
+pidfile="/run/${RC_SVCNAME}.pid"
+retry="TERM/10/KILL/5"
+
+depend() {
+	need net
+	use dns
+	before cupsd
+}

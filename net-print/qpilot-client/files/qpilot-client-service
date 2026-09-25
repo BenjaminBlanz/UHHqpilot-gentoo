@@ -1,0 +1,8 @@
+#!/bin/sh
+# Runs the Q Pilot client service in its state directory, where it keeps its
+# config (with the client ID), the server list, spooled jobs and logs.
+QP_HOME=@QP_HOME@
+state="${QPILOT_STATE_DIR:-/var/lib/qpilot-client}"
+cd "${state}" || exit 1
+[ -e service-config.txt ] || cp "${QP_HOME}/Service/service-config.txt" . || exit 1
+exec @JAVA@ -Dfile.encoding=UTF-8 -jar "${QP_HOME}/Service/libs/qpilot-client-service-exe.jar"

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Q Pilot-Client
+GenericName=Follow-me printing client
+Comment=Log in to Uni Hamburg follow-me printing
+Exec=qpilot-client-gui
+Icon=qpilot-client
+Terminal=false
+Categories=Network;Printing;
