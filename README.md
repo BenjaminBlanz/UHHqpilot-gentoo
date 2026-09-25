@@ -68,22 +68,34 @@ waiting jobs. The `DirectPrinter_*` queues (TA P-C3562i MFP driver) are for dire
 printing; per the RRZ guide they can be deleted with `lpadmin -x` if you do not use them.
 
 The client needs to reach the Q Pilot servers (`ps-s-qp01.ad.uni-hamburg.de`), so outside
-the university network connect to the UHH VPN first.
+the university network connect to the UHH VPN first. The same holds for `emerge`: the
+packages are downloaded from the RRZ mirror, which only answers inside the UHH network.
 
 ## Updates
 
-A daily GitHub Action ([`scripts/bump.py`](scripts/bump.py)) reads the RRZ repository's
-package index. When there is a new version, it adds the ebuild and Manifest entry, checking
-the download against the index's SHA256, and pushes. New RRZ releases therefore arrive with
-the normal
+The RRZ mirror only answers inside the UHH network (or VPN), so version bumps run on a
+machine there rather than on GitHub. [`scripts/bump-and-push`](scripts/bump-and-push) runs
+daily: it reads the mirror's package index with [`scripts/bump.py`](scripts/bump.py), adds
+the ebuild and Manifest entry for any new version (checking the download against the
+index's SHA256), and pushes. It works in its own clone
+(`~/.local/share/uhh-qpilot-bump`), exits silently when the mirror is unreachable, and
+logs failures to `~/.local/state/uhh-qpilot-bump.log`. Set up as root, for the user whose
+SSH key can push:
+
+```sh
+printf '#!/bin/sh\nexec runuser -u benjamin -- /home/benjamin/software/UHH/qpilot/scripts/bump-and-push\n' \
+    > /etc/cron.daily/uhh-qpilot-bump
+chmod 755 /etc/cron.daily/uhh-qpilot-bump
+```
+
+New RRZ releases then arrive with the normal
 
 ```sh
 emerge --sync && emerge -uDN @world
 ```
 
 If a release changes the package layout, the build fails rather than installing something
-half-working; the ebuild then needs fixing by hand. Run `scripts/bump.py` locally to do the
-same as the Action.
+half-working; the ebuild then needs fixing by hand.
 
 ## How it differs from the Ubuntu install
 

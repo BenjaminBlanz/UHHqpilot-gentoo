@@ -8,6 +8,8 @@ the index yields net-print/ta-utax-dialog/ta-utax-dialog-9.5.ebuild.
 
 Prints one line per added ebuild ("net-print/qpilot-client 5.3.0.1") and
 exits non-zero when a version cannot be added (checksum or file name mismatch).
+Exits with 3 if the mirror cannot be reached; it only answers inside the UHH
+network or VPN.
 """
 
 import argparse
@@ -29,6 +31,8 @@ TRACKED = {
 }
 
 REPO = Path(__file__).resolve().parent.parent
+
+UNREACHABLE = 3
 
 
 def parse_index(text):
@@ -63,8 +67,8 @@ def version_key(pvr):
     return tuple(int(x) for x in upstream.split(".")), int(patch or 0), int(rev or 0)
 
 
-def fetch(url, dest=None):
-    with urllib.request.urlopen(url, timeout=120) as resp:
+def fetch(url, dest=None, timeout=120):
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
         if dest is None:
             return resp.read()
         with open(dest, "wb") as out:
@@ -90,9 +94,20 @@ def main():
     ap.add_argument("--index", help="read this Packages file instead of the mirror")
     ap.add_argument("--distdir", default="/tmp/uhh-qpilot-distfiles",
                     help="where to download .debs (default: %(default)s)")
+    ap.add_argument("--probe", action="store_true",
+                    help="only check that the mirror is reachable")
     args = ap.parse_args()
 
-    text = Path(args.index).read_text() if args.index else fetch(INDEX).decode()
+    if args.index:
+        text = Path(args.index).read_text()
+    else:
+        try:
+            text = fetch(INDEX, timeout=15).decode()
+        except OSError as e:
+            print(f"mirror unreachable: {e}", file=sys.stderr)
+            return UNREACHABLE
+    if args.probe:
+        return 0
     distdir = Path(args.distdir)
     distdir.mkdir(parents=True, exist_ok=True)
 

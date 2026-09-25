@@ -1,0 +1,43 @@
+#!/bin/sh
+# Daily job for a machine that can reach the RRZ mirror (UHH network or VPN):
+# adds ebuilds for new RRZ releases to the overlay and pushes them to GitHub.
+# Works in its own clone, so a development clone is never touched. Exits
+# silently when the mirror is unreachable; other failures go to the log.
+#
+# Run it as the user whose SSH key can push, e.g. from /etc/cron.daily:
+#   exec runuser -u benjamin -- /path/to/scripts/bump-and-push
+
+remote="${UHH_QPILOT_REMOTE:-git@github.com:BenjaminBlanz/UHHqpilot-gentoo.git}"
+clone="${XDG_DATA_HOME:-${HOME}/.local/share}/uhh-qpilot-bump"
+distdir="${XDG_CACHE_HOME:-${HOME}/.cache}/uhh-qpilot-distfiles"
+log="${XDG_STATE_HOME:-${HOME}/.local/state}/uhh-qpilot-bump.log"
+here=$(dirname "$(readlink -f "$0")")
+
+python3 "${here}/bump.py" --probe 2>/dev/null || exit 0
+
+mkdir -p "$(dirname "${log}")"
+exec >>"${log}" 2>&1
+fail() {
+	echo "$(date '+%F %T') $*"
+	exit 1
+}
+
+if [ ! -d "${clone}/.git" ]; then
+	git clone -q "${remote}" "${clone}" || fail "clone failed"
+fi
+cd "${clone}" || fail "no clone"
+git fetch -q origin && git reset -q --hard origin/main || fail "fetch failed"
+
+added=$(python3 scripts/bump.py --distdir "${distdir}")
+status=$?
+[ "${status}" -eq 3 ] && exit 0
+[ -n "${added}" ] || { [ "${status}" -eq 0 ] && exit 0; fail "bump.py failed (${status})"; }
+
+git add net-print || fail "git add failed"
+git commit -q \
+	-m "$(echo "${added}" | awk '{ printf "%s%s: add %s", sep, $1, $2; sep = ", " }')" \
+	-m "Added by scripts/bump-and-push from the UHH APT repository index." \
+	|| fail "commit failed"
+git push -q origin HEAD:main || fail "push failed"
+echo "$(date '+%F %T') added: $(echo "${added}" | tr '\n' ' ')"
+[ "${status}" -eq 0 ] || fail "bump.py failed for some packages (${status})"
