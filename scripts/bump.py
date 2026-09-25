@@ -56,10 +56,11 @@ def deb_to_pv(version):
     return f"{upstream}_p{revision}"
 
 
-def version_key(pv):
-    """'9.4_p1' -> ((9, 4), 1) for picking the newest ebuild."""
+def version_key(pvr):
+    """'9.4_p1-r2' -> ((9, 4), 1, 2) for picking the newest ebuild."""
+    pv, _, rev = pvr.partition("-r")
     upstream, _, patch = pv.partition("_p")
-    return tuple(int(x) for x in upstream.split(".")), int(patch or 0)
+    return tuple(int(x) for x in upstream.split(".")), int(patch or 0), int(rev or 0)
 
 
 def fetch(url, dest=None):
@@ -110,7 +111,7 @@ def main():
         pkgdir = REPO / atom
         pn = pkgdir.name
         target = pkgdir / f"{pn}-{pv}.ebuild"
-        if target.exists():
+        if target.exists() or any(pkgdir.glob(f"{pn}-{pv}-r*.ebuild")):
             continue
         ebuilds = sorted(pkgdir.glob(f"{pn}-*.ebuild"),
                          key=lambda p: version_key(p.stem[len(pn) + 1:]))

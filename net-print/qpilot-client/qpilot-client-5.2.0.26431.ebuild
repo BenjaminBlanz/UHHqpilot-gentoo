@@ -19,6 +19,8 @@ KEYWORDS="-* ~amd64"
 RESTRICT="bindist mirror strip"
 
 RDEPEND="
+	acct-user/qpilot
+	|| ( >=sys-apps/openrc-0.45 sys-apps/systemd )
 	>=virtual/jre-17:*
 	net-print/cups
 	net-print/ta-utax-dialog
@@ -78,8 +80,6 @@ src_install() {
 
 	newinitd "${FILESDIR}"/qpilot-client.initd qpilot-client
 	systemd_dounit "${FILESDIR}"/qpilot-client.service
-	keepdir /var/lib/qpilot-client
-	fperms 0700 /var/lib/qpilot-client
 
 	newicon "${d}"/GUI/qpilot-logo.png qpilot-client.png
 	domenu "${FILESDIR}"/qpilot-client-gui.desktop "${FILESDIR}"/qpilot-client-joblist.desktop

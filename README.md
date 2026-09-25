@@ -10,6 +10,7 @@ automatically.
 |---|---|
 | `net-print/qpilot-client` | Q Pilot client service and tray GUI; sets up the `UHHPrinter_SW`, `UHHPrinter_Farbe`, `DirectPrinter_SW` and `DirectPrinter_Farbe` queues |
 | `net-print/ta-utax-dialog` | TA Triumph-Adler/UTAX CUPS filters and PPDs the queues use |
+| `acct-user/qpilot`, `acct-group/qpilot` | User the client service runs as |
 
 Nothing from the vendor is stored in this repository; the ebuilds download the `.deb`s
 from `apt-mirror.rrz.uni-hamburg.de`.
@@ -95,9 +96,9 @@ same as the Action.
 - **Left out:** `ta_utax_dialog` (printer settings GUI) and `aqrated` (tray daemon) need
   Qt5, which Gentoo no longer has. Printing does not need them; set the print options in
   the print dialog instead.
-- **Root service:** the service runs as root, as upstream. The Q Pilot server tells it to
-  take LPD jobs on port 515, which needs root. It accepts jobs from any host that can reach
-  that port, so keep port 515 closed in your firewall.
+- **Service user:** the service runs as user `qpilot` rather than root. The Q Pilot server
+  tells it to take LPD jobs on port 515, so it gets `CAP_NET_BIND_SERVICE` and nothing else
+  (OpenRC ≥ 0.45 `capabilities`, or systemd `AmbientCapabilities`).
 
 ## Notes on the RRZ Ubuntu guide
 

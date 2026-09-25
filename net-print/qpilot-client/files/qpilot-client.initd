@@ -5,6 +5,10 @@
 description="Q Pilot client service (Uni Hamburg follow-me printing)"
 command="/usr/libexec/qpilot-client/qpilot-client-service"
 command_background="yes"
+command_user="qpilot:qpilot"
+# The Q Pilot server sets the LPD port the service listens on to 515.
+capabilities="^cap_net_bind_service"
+no_new_privs="yes"
 pidfile="/run/${RC_SVCNAME}.pid"
 retry="TERM/10/KILL/5"
 
