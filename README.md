@@ -51,8 +51,8 @@ from `apt-mirror.rrz.uni-hamburg.de`.
    systemctl enable --now qpilot-client                                   # systemd
    ```
 
-5. Start **Q Pilot-Client** from the menu (it also autostarts at login) and log in with
-   your UHH ID (`bxx1234`) and password.
+5. Start **Q Pilot-Client** from the menu (it also autostarts at login). It only shows a
+   tray icon; it asks for your UHH ID (`bxx1234`) and password when you first print.
 
 6. If your CopyCard is not registered yet: put it on the terminal on the right side of a
    5007ci/4007ci and log in there with your UHH ID. RRZ guide: *CopyCard registrieren*
@@ -64,6 +64,9 @@ Print to `UHHPrinter_SW` (black and white) or `UHHPrinter_Farbe` (colour), then 
 the job at any follow-me printer with your CopyCard. *Q Pilot job list* in the menu shows
 waiting jobs. The `DirectPrinter_*` queues (TA P-C3562i MFP driver) are for direct
 printing; per the RRZ guide they can be deleted with `lpadmin -x` if you do not use them.
+
+On KDE Plasma under Wayland the tray icon's right-click menu does not open (Java AWT tray
+icons shown through `xembedsniproxy`). Printing and the login prompt work regardless.
 
 The client needs to reach the Q Pilot servers (`ps-s-qp01.ad.uni-hamburg.de`), so outside
 the university network connect to the UHH VPN first.
